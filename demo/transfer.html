@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+    #canvas {
+      background: gray;
+    }
+  </style>
+  <title>绘制和变换三角形</title>
+</head>
+
+<body>
+  <!-- webgl提供了一种方便的机制，即缓冲区对象（buffer object）。 -->
+  <!-- 创建缓冲区过程 -->
+  <!-- 
+  1、创建缓冲区对象 gl.createBuffer()
+  2、绑定缓冲区对象 gl.indBuffer()
+  3、将数据写入缓冲区对象 gl.bufferData()
+  4、将缓冲区对象分配给一个attribute对象 gl.vertexAttribointer()
+  5、开启attribute对象 gl.enableVertexAttribArray() -->
+
+  <!-- 类型化数组：Float32Array 类型化数组不支持push()和pop()方法-->
+  <!--  -->
+  <canvas width="400" height="400" id="canvas">
+    please use a brower that support canvas
+  </canvas>
+  <script src="../utils/index.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas')
+    const gl = canvas.getContext('webgl')
+
+    // 创建着色器:定点着色器
+    const VERTEX_SOURCE = `
+      attribute vec4 a_Position;
+      void main(){
+        gl_Position = a_Position; //vec4(0.5,0.0,0.0,1.0)
+        gl_PointSize = 10.0;
+      }
+    `;
+
+    // 片元着色器
+    // precision mediump float; //精度限定词
+    // uniform vec4 u_FragColor;
+    const FRAGMENT_SOURCE = `
+      void main(){
+        gl_FragColor = vec4(0.5,0.0,0.0,1.0);
+      }
+    `;
+    const program = initShader(gl, VERTEX_SOURCE, FRAGMENT_SOURCE)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position');
+
+    const points = new Float32Array([
+      0, 1,
+      -1, -1,
+      1, -1,
+    ])
+
+    const buffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
+
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(a_Position)
+    // gl.vertexAttrib2f(aPosition, 0.0, 0.0)
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3); // 第二个参数表示想从第几个点开始绘制，第三个参数表示只会执行几次
+    // gl.POINTS 点
+    // gl.LINES 线段
+    // gl.LINE_STRIP 线条
+    // gl.LINE_LOOP 回路
+    // gl.TRIANGLES 三角形
+    // gl.TRIANGLE_STRIP 三角带
+    // gl.TRIANGLE_FAN 三角扇
+  </script>
+</body>
+
+</html>

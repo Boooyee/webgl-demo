@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+    }
+    /* #canvas {
+      background: gray;
+    } */
+  </style>
+  <title>绘制一个点</title>
+</head>
+
+<body onload="main()">
+  <canvas id="canvas" width="400" height="400">
+    please use a browser that support 'canvas'
+  </canvas>
+  <script src="./utils/index.js"></script>
+  <script>
+    function main() {
+      // const canvas = document.getElementById('canvas')
+      // const ctx = canvas.getContext('2d')
+      // ctx.fillStyle = 'rgba(0, 0, 255, 1.0)'
+      // ctx.fillRect(120,10,150,150)
+
+      // const gl = canvas.getContext('webgl')
+      // gl.clearColor(0,0.0,1.0,1.0) // 指定清空canvas颜色，接受四个参数
+      // gl.clear(gl.COLOR_BUFFER_BIT)  // 清空canvas 
+
+      // gl.COLOR_BUFFER_BIT 清空颜色缓存
+      // gl.DEPTH_BUFFER_BIT 清空深度缓冲区
+      // gl.STENCIL_BUFFER_BIT 清空模板缓冲区 
+
+      // 绘制一个点 
+      // 创建着色器源码
+      const canvas = document.getElementById('canvas')
+      const gl = canvas.getContext('webgl')
+
+      const VERTEX_SHADER_SOURCE = `
+        attribute vec4 a_Position;
+        attribute float a_PointSize;
+        void main(){
+          gl_Position = a_Position; //vec4(0.5,0.0,0.0,1.0)
+          gl_PointSize = 10.0;
+        }
+      `;
+
+      const FRAGMENT_SHADER_SOURCE = `
+        precision mediump float; //精度限定词
+        uniform vec4 u_FragColor;
+        void main() {
+          gl_FragColor = u_FragColor;
+        }
+      `;
+      const program = initShader(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+
+      const a_Position = gl.getAttribLocation(program, 'a_Position') // 获取顶点着色器变量内存地址
+      const a_PointSize = gl.getAttribLocation(program, 'a_PointSize')
+
+      const u_FragColor = gl.getUniformLocation(program, 'u_FragColor') // 获取uniform变量存储地址
+
+      // 注册鼠标点击事件响应函数
+      canvas.onmousedown = function(ev){
+        mouseClick(ev, gl, canvas, a_Position)
+      }
+      const g_points = [] // 鼠标点击位置数组
+      function mouseClick(ev, gl, canvas, a_Position){
+        let x = ev.clientX;
+        let y = ev.clientY;
+        let rect = ev.target.getBoundingClientRect()
+
+        x = ((x - rect.left) - canvas.width/2)/((canvas.width)/2)
+        y = (canvas.height/2 - (y - rect.top))/((canvas.height)/2)
+        g_points.push(x)
+        g_points.push(y)
+        // 清除canvas
+        gl.clear(gl.COLOR_BUFFER_BIT)  // 清空canvas 
+        let len = g_points.length
+        for(let i = 0; i < len; i+=2){
+          gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0)
+          gl.drawArrays(gl.POINTS, 0, 1);
+
+          gl.uniform4f(u_FragColor, x , y,x , y  )
+        }
+      }
+      // 将顶点位置传输给attribute变量
+      // gl.vertexAttrib3f(a_Position, 0.5,0.5,0.0)
+      // gl.drawArrays(gl.POINTS, 0, 1);
+
+      // let x = 0;
+      // setInterval(() => {
+      //   x += 0.1;
+      //   if (x > 1.0) {
+      //     x = 0;
+      //   }
+      //   gl.vertexAttrib1f(a_Position, x)
+      //   gl.vertexAttrib1f(a_PointSize, 100 * x)
+
+      //   gl.drawArrays(gl.POINTS, 0, 1);
+      // }, 1000)
+
+      // 如何在js和着色器之间传输数据
+      // 使用attribute变量或者uniform变量。使用哪种变量取决于传输数据本身。
+      // attribute 被称为存储限定符
+      // 想要向顶点着色器的a_Position变量传输数据时，首先要向webgl系统请求该变量的存储地址
+
+      // 通过鼠标点击绘制
+      // 首先需要把坐标从浏览器坐标系转换到<canvas>坐标系，然后再转到WebGL坐标系下。
+      // 第一步：浏览器坐标系转换到canvas坐标系 x - rect.left，y - rect.top
+      // 第二部：canvas坐标转换到WebGL坐标
+      
+      // 改变点的颜色 可以用uniform变量将颜色值传给着色器
+    }
+  </script>
+
+</body>
+
+</html>
